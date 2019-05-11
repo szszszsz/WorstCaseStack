@@ -12,7 +12,7 @@ dir = None # Working directory
 su_ext = '.su'
 obj_ext = '.o'
 manual_ext = '.msu'
-read_elf_path = "arm-none-eabi-readelf.exe" # You may need to enter the full path here
+read_elf_path = "arm-none-eabi-readelf" # You may need to enter the full path here
 stdout_encoding = "utf-8"  # System dependant
 
 
@@ -225,6 +225,7 @@ def resolve_all_calls(call_graph):
         fxn_dict2['r_calls'] = []
         fxn_dict2['unresolved_calls'] = set()
 
+        if not 'calls' in fxn_dict2: return
         for call in fxn_dict2['calls']:
             call_dict = find_fxn(fxn_dict2['tu'], call, call_graph)
             if call_dict:
@@ -257,7 +258,7 @@ def calc_all_wcs(call_graph):
             return
 
         # Check for pointer calls
-        if fxn_dict2['has_ptr_call']:
+        if 'has_ptr_call' in fxn_dict2 and fxn_dict2['has_ptr_call']:
             fxn_dict2['wcs'] = 'unbounded'
             return
 
@@ -287,7 +288,7 @@ def calc_all_wcs(call_graph):
             for unresolved_call in call_dict['unresolved_calls']:
                 fxn_dict2['unresolved_calls'].add(unresolved_call)
 
-        fxn_dict2['wcs'] = call_max + fxn_dict2['local_stack']
+        fxn_dict2['wcs'] = call_max + ( fxn_dict2['local_stack'] if 'local_stack' in fxn_dict2 else 0 )
 
     # Loop through every global and local function
     # and resolve each call, save results in r_calls
@@ -311,7 +312,7 @@ def print_all_fxns(call_graph):
         else:
             unresolved_str = ''
 
-        print(row_format.format(fxn_dict2['tu'], fxn_dict2['demangledName'], stack, unresolved_str))
+        print(row_format.format(fxn_dict2['tu'], fxn_dict2['demangledName'] if 'demangledName' in fxn_dict2 else '** None', stack, unresolved_str))
 
     def get_order(val):
         if val == 'unbounded':
